@@ -1,0 +1,221 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.coordinatorlayout.widget.CoordinatorLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/coordinator"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <!-- App bar -->
+    <com.google.android.material.appbar.MaterialToolbar
+        android:id="@+id/topAppBar"
+        android:layout_width="match_parent"
+        android:layout_height="?attr/actionBarSize"
+        android:background="?attr/colorPrimary"
+        android:title="Attendance Management"
+        android:titleTextColor="@android:color/white"
+        app:navigationIconTint="@android:color/white"/>
+
+    <!-- Attendance count displayed under the toolbar -->
+    <TextView
+        android:id="@+id/txtAttendanceCount"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Today's marked: 0"
+        android:layout_marginStart="12dp"
+        android:layout_marginTop="?attr/actionBarSize"
+        android:textAppearance="?attr/textAppearanceBody2" />
+
+    <!-- content area is scrollable to avoid overlap on small screens -->
+    <androidx.core.widget.NestedScrollView
+        android:id="@+id/scroll"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        app:layout_behavior="@string/appbar_scrolling_view_behavior"
+        android:fillViewport="true"
+        android:clipToPadding="false"
+        android:paddingTop="?attr/actionBarSize">
+
+        <LinearLayout
+            android:id="@+id/content_root"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="12dp">
+
+            <!-- Status / instructions -->
+            <TextView
+                android:id="@+id/txtStatus"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Status: Idle"
+                android:textAppearance="?attr/textAppearanceBody1"
+                android:paddingBottom="8dp"/>
+
+            <!-- Camera preview card (keeps aspect and corners) -->
+            <androidx.cardview.widget.CardView
+                android:id="@+id/preview_card"
+                android:layout_width="match_parent"
+                android:layout_height="360dp"
+                app:cardCornerRadius="10dp"
+                app:cardUseCompatPadding="true"
+                android:layout_marginBottom="12dp">
+
+                <FrameLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent">
+
+                    <androidx.camera.view.PreviewView
+                        android:id="@+id/previewView"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        app:implementationMode="performance"/>
+
+                    <com.example.attendancemanagementsystem.OverlayView
+                        android:id="@+id/overlayView"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent" />
+                </FrameLayout>
+            </androidx.cardview.widget.CardView>
+
+            <!-- Recognized person summary (visible and large for faculty) -->
+            <androidx.cardview.widget.CardView
+                android:id="@+id/recognized_card"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="12dp"
+                app:cardCornerRadius="8dp"
+                app:cardUseCompatPadding="true">
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="12dp">
+
+                    <TextView
+                        android:id="@+id/txtRecognizedName"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="No one detected"
+                        android:textStyle="bold"
+                        android:textSize="16sp"/>
+
+                    <TextView
+                        android:id="@+id/txtRecognizedId"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text=""
+                        android:paddingTop="6dp"/>
+
+                    <TextView
+                        android:id="@+id/txtRecognizedHint"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="(Switch to Manual to confirm before marking)"
+                        android:paddingTop="6dp"
+                        android:textAppearance="?attr/textAppearanceCaption"/>
+                </LinearLayout>
+            </androidx.cardview.widget.CardView>
+
+            <!-- Controls row: Start/Stop/Enroll/Attendance -->
+            <LinearLayout
+                android:id="@+id/controls"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:weightSum="4"
+                android:layout_marginBottom="12dp">
+
+                <Button
+                    android:id="@+id/btnStart"
+                    android:layout_width="0dp"
+                    android:layout_weight="1"
+                    android:layout_height="wrap_content"
+                    android:text="Start" />
+
+                <Button
+                    android:id="@+id/btnStop"
+                    android:layout_width="0dp"
+                    android:layout_weight="1"
+                    android:layout_height="wrap_content"
+                    android:text="Stop"
+                    android:layout_marginStart="8dp"/>
+
+                <Button
+                    android:id="@+id/btnEnroll"
+                    android:layout_width="0dp"
+                    android:layout_weight="1"
+                    android:layout_height="wrap_content"
+                    android:text="Enroll"
+                    android:layout_marginStart="8dp"/>
+
+                <Button
+                    android:id="@+id/btnAttendance"
+                    android:layout_width="0dp"
+                    android:layout_weight="1"
+                    android:layout_height="wrap_content"
+                    android:text="Attendance"
+                    android:layout_marginStart="8dp"/>
+            </LinearLayout>
+
+            <!-- Mode + Mark controls -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:layout_marginBottom="12dp">
+
+                <TextView
+                    android:id="@+id/txtMode"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Mode: Auto Mark"
+                    android:layout_marginEnd="8dp"/>
+
+                <com.google.android.material.switchmaterial.SwitchMaterial
+                    android:id="@+id/switchAutoMark"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:checked="true"/>
+
+                <!-- spacer -->
+                <View
+                    android:layout_width="0dp"
+                    android:layout_height="1dp"
+                    android:layout_weight="1"/>
+
+                <Button
+                    android:id="@+id/btnMarkPresent"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Mark Present"
+                    android:enabled="false"/>
+
+                <Button
+                    android:id="@+id/btnUndoLast"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="8dp"
+                    android:text="Undo Last"/>
+            </LinearLayout>
+
+            <!-- small footer to avoid FAB overlap when present -->
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="20dp"/>
+        </LinearLayout>
+    </androidx.core.widget.NestedScrollView>
+
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/fabAttendance"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:contentDescription="Open attendance"
+        app:srcCompat="@android:drawable/ic_menu_agenda"
+        app:layout_anchor="@id/preview_card"
+        app:layout_anchorGravity="bottom|end"
+        android:layout_margin="16dp"/>
+
+</androidx.coordinatorlayout.widget.CoordinatorLayout>

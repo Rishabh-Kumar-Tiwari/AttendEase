@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:tools="http://schemas.android.com/tools">
+
+    <!-- ==========================================================
+         🌞 Light / Default Theme
+         Applied when device is in light mode
+         ========================================================== -->
+    <style name="Theme.AttendanceManagementSystem" parent="Theme.Material3.DayNight.NoActionBar">
+        <!-- Primary Color Palette -->
+        <item name="colorPrimary">@color/purple_500</item>
+        <item name="colorPrimaryContainer">@color/purple_200</item>
+        <item name="colorOnPrimary">@android:color/white</item>
+
+        <!-- Secondary -->
+        <item name="colorSecondary">@color/teal_200</item>
+        <item name="colorOnSecondary">@android:color/black</item>
+
+        <!-- Backgrounds -->
+        <item name="android:windowBackground">@color/white</item>
+        <item name="colorSurface">@color/white</item>
+        <item name="colorOnSurface">@android:color/black</item>
+
+        <!-- Status & Navigation Bar -->
+        <item name="android:statusBarColor">?attr/colorPrimaryContainer</item>
+        <item name="android:navigationBarColor">@color/white</item>
+        <item name="android:windowLightStatusBar">true</item>
+
+        <!-- Typography -->
+        <item name="android:fontFamily">@font/roboto</item>
+
+        <!-- Components -->
+        <item name="materialButtonStyle">@style/Widget.Material3.Button</item>
+        <item name="switchStyle">@style/Widget.Material3.CompoundButton.Switch</item>
+    </style>
+
+    <!-- ==========================================================
+         🚀 Splash Screen Theme
+         Minimal white screen before MainActivity loads
+         ========================================================== -->
+    <style name="Theme.Splash" parent="Theme.Material3.DayNight.NoActionBar">
+        <item name="android:windowBackground">@android:color/white</item>
+        <item name="android:statusBarColor">@android:color/white</item>
+        <item name="android:navigationBarColor">@android:color/white</item>
+        <item name="android:windowLightStatusBar">true</item>
+    </style>
+
+</resources>
