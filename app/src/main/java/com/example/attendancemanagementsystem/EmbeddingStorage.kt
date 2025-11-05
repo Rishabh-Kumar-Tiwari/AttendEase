@@ -15,7 +15,7 @@ object EmbeddingStorage {
 
     /**
      * Save or update one student's embeddings.
-     * Each embedding = FloatArray (e.g. 128-dim from FaceNet).
+     * Each embedding = FloatArray.
      */
     fun saveEnrollment(context: Context, studentId: String, embeddings: List<FloatArray>) {
         val all = loadRaw(context).toMutableMap()
@@ -28,6 +28,19 @@ object EmbeddingStorage {
         all[studentId] = listOfLists
         val json = gson.toJson(all)
         File(context.filesDir, FILE_NAME).writeText(json)
+    }
+
+    /**
+     * Remove a student's enrollment (embeddings) from storage.
+     * If the student id doesn't exist, this is a no-op.
+     */
+    fun removeEnrollment(context: Context, studentId: String) {
+        val raw = loadRaw(context).toMutableMap()
+        if (raw.remove(studentId) != null) {
+            // write back
+            val json = gson.toJson(raw)
+            File(context.filesDir, FILE_NAME).writeText(json)
+        }
     }
 
     /**
@@ -47,6 +60,28 @@ object EmbeddingStorage {
     }
 
     /**
+     * Load only the specified student ids into RecognitionManager.
+     *
+     * This clears RecognitionManager first, then registers only the embeddings
+     * for the requested ids. If an id is missing from storage it is skipped.
+     */
+    fun loadIntoRecognitionManager(context: Context, ids: List<String>) {
+        // clear first to prevent cross-class leftover embeddings
+        RecognitionManager.clear()
+
+        if (ids.isEmpty()) return
+
+        val raw = loadRaw(context)
+        for (id in ids) {
+            val embLists = raw[id] ?: continue
+            val converted = embLists.map { inner ->
+                FloatArray(inner.size) { i -> inner[i].toFloat() }
+            }
+            RecognitionManager.enroll(id, converted)
+        }
+    }
+
+    /**
      * Load the raw JSON as Map<String, List<List<Double>>>
      */
     private fun loadRaw(context: Context): Map<String, List<List<Double>>> {
@@ -59,16 +94,6 @@ object EmbeddingStorage {
             gson.fromJson<Map<String, List<List<Double>>>>(json, type) ?: emptyMap()
         } catch (e: Exception) {
             emptyMap()
-        }
-    }
-
-    /**
-     * Load all enrollments and push into RecognitionManager.
-     */
-    fun loadIntoRecognitionManager(context: Context) {
-        val all = loadAll(context)
-        for ((id, embeddings) in all) {
-            RecognitionManager.enroll(id, embeddings)
         }
     }
 }

@@ -1,47 +1,65 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources xmlns:tools="http://schemas.android.com/tools">
 
-    <!-- ==========================================================
-         🌞 Light / Default Theme
-         Applied when device is in light mode
-         ========================================================== -->
+    <!-- App theme (light / default) -->
     <style name="Theme.AttendanceManagementSystem" parent="Theme.Material3.DayNight.NoActionBar">
-        <!-- Primary Color Palette -->
+        <!-- Brand colours -->
         <item name="colorPrimary">@color/purple_500</item>
-        <item name="colorPrimaryContainer">@color/purple_200</item>
-        <item name="colorOnPrimary">@android:color/white</item>
+        <item name="colorPrimaryContainer">@color/purple_100</item>
+        <item name="colorOnPrimary">@color/on_primary</item>
 
-        <!-- Secondary -->
-        <item name="colorSecondary">@color/teal_200</item>
-        <item name="colorOnSecondary">@android:color/black</item>
+        <item name="colorSecondary">@color/teal_400</item>
+        <item name="colorOnSecondary">@color/on_primary</item>
 
-        <!-- Backgrounds -->
-        <item name="android:windowBackground">@color/white</item>
+        <!-- Surface & background -->
+        <item name="android:windowBackground">@color/gray_50</item>
         <item name="colorSurface">@color/white</item>
-        <item name="colorOnSurface">@android:color/black</item>
+        <item name="colorOnSurface">@color/on_surface</item>
 
-        <!-- Status & Navigation Bar -->
-        <item name="android:statusBarColor">?attr/colorPrimaryContainer</item>
-        <item name="android:navigationBarColor">@color/white</item>
-        <item name="android:windowLightStatusBar">true</item>
+        <!-- System bars -->
+        <item name="android:statusBarColor">@color/purple_700</item>
+        <item name="android:navigationBarColor">@color/black</item>
+        <item name="android:windowLightStatusBar">false</item>
 
-        <!-- Typography -->
+        <!-- Fonts -->
         <item name="android:fontFamily">@font/roboto</item>
 
-        <!-- Components -->
+        <!-- Widget defaults -->
         <item name="materialButtonStyle">@style/Widget.Material3.Button</item>
         <item name="switchStyle">@style/Widget.Material3.CompoundButton.Switch</item>
+
+        <!-- Toolbar style applied app-wide -->
+        <item name="toolbarStyle">@style/CustomToolbar</item>
+        <item name="materialToolbarStyle">@style/CustomToolbar</item>
+
+        <item name="android:windowContentOverlay">@null</item>
     </style>
 
-    <!-- ==========================================================
-         🚀 Splash Screen Theme
-         Minimal white screen before MainActivity loads
-         ========================================================== -->
+    <!-- Compact custom toolbar used by toolbars; keeps look consistent -->
+    <style name="CustomToolbar" parent="Widget.MaterialComponents.Toolbar">
+        <item name="android:background">?attr/colorPrimary</item>
+        <item name="titleTextColor">@color/on_primary</item>
+        <item name="subtitleTextColor">@color/on_primary</item>
+        <item name="navigationIconTint">@color/on_primary</item>
+        <item name="android:tint">@color/on_primary</item>
+        <item name="android:elevation">4dp</item>
+        <item name="android:layout_height">?attr/actionBarSize</item>
+    </style>
+
+    <!-- Toolbar Title Bold appearance (used by app layouts) -->
+    <style name="ToolbarTitleBold" parent="TextAppearance.Material3.TitleLarge">
+        <item name="android:textStyle">bold</item>
+        <item name="android:textColor">@color/on_primary</item>
+    </style>
+
+    <!-- Splash theme used in AndroidManifest for the launcher activity -->
     <style name="Theme.Splash" parent="Theme.Material3.DayNight.NoActionBar">
-        <item name="android:windowBackground">@android:color/white</item>
-        <item name="android:statusBarColor">@android:color/white</item>
-        <item name="android:navigationBarColor">@android:color/white</item>
-        <item name="android:windowLightStatusBar">true</item>
+        <!-- A plain background (use your branded gradient/drawable if you prefer) -->
+        <item name="android:windowBackground">@color/purple_500</item>
+        <!-- Status bar same tone as primary -->
+        <item name="android:statusBarColor">@color/purple_700</item>
+        <!-- keep light status bar icons (white) -->
+        <item name="android:windowLightStatusBar">false</item>
     </style>
 
 </resources>

@@ -1,10 +1,29 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="purple_200">#BB86FC</color>
-    <color name="purple_500">#6200EE</color>
-    <color name="purple_700">#3700B3</color>
-    <color name="teal_200">#03DAC5</color>
-    <color name="gray_900">#121212</color>
+    <!-- Primary / Brand -->
+    <color name="purple_700">#5E35B1</color>
+    <color name="purple_500">#7C4DFF</color>
+    <color name="purple_300">#B388FF</color>
+    <color name="purple_200">#D1C4E9</color>
+    <color name="purple_100">#EDE7F6</color>
+
+    <!-- Accent -->
+    <color name="teal_400">#26A69A</color>
+    <color name="teal_200">#80CBC4</color>
+
+    <!-- Surface / background -->
     <color name="white">#FFFFFF</color>
+    <color name="gray_50">#FAFAFB</color>
+    <color name="gray_100">#F3F4F6</color>
+    <color name="gray_200">#E5E7EB</color>
+    <color name="gray_800">#1F2937</color>
+    <color name="gray_900">#0F1722</color>
+
+    <!-- Important on-X colors -->
+    <color name="on_primary">#FFFFFF</color>
+    <color name="on_surface">#111827</color>
+    <color name="on_surface_dark">#E6EEF6</color>
+
+    <!-- Utility -->
     <color name="black">#000000</color>
 </resources>

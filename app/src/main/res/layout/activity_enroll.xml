@@ -5,19 +5,22 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
+    <!-- Single MaterialToolbar -->
     <com.google.android.material.appbar.MaterialToolbar
         android:id="@+id/toolbarEnroll"
         android:layout_width="match_parent"
         android:layout_height="?attr/actionBarSize"
-        android:title="Enroll Student"
-        android:titleTextColor="@android:color/white"
-        android:background="?attr/colorPrimary" />
+        android:background="?attr/colorPrimary"
+        app:title="Student Enrollment"
+        app:titleCentered="true"
+        app:titleTextAppearance="@style/ToolbarTitleBold"
+        android:elevation="2dp" />
 
     <ScrollView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_marginTop="?attr/actionBarSize"
-        android:padding="12dp"
+        android:padding="@dimen/page_padding"
         android:fillViewport="true">
 
         <LinearLayout
@@ -26,21 +29,39 @@
             android:orientation="vertical"
             android:gravity="center_horizontal">
 
-            <!-- Camera Preview (reused layout) -->
+            <!-- Camera preview card with overlayed switch icon -->
             <androidx.cardview.widget.CardView
                 android:layout_width="match_parent"
                 android:layout_height="360dp"
-                app:cardCornerRadius="10dp"
+                app:cardCornerRadius="@dimen/card_corner_radius"
                 app:cardUseCompatPadding="true"
                 android:layout_marginBottom="12dp">
-                <include layout="@layout/view_face_preview" />
+
+                <FrameLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent">
+
+                    <include layout="@layout/view_face_preview" />
+
+                    <!-- Small switch icon top-right -->
+                    <ImageButton
+                        android:id="@+id/btnSwitchCameraEnroll"
+                        android:layout_width="36dp"
+                        android:layout_height="36dp"
+                        android:layout_margin="10dp"
+                        android:layout_gravity="top|end"
+                        android:background="?attr/selectableItemBackgroundBorderless"
+                        android:padding="6dp"
+                        android:tint="@android:color/white"
+                        app:srcCompat="@drawable/ic_cameraswitch" />
+                </FrameLayout>
             </androidx.cardview.widget.CardView>
 
             <EditText
                 android:id="@+id/inputName"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:hint="Enter Full Name"
+                android:hint="@string/hint_name"
                 android:inputType="textPersonName"
                 android:padding="8dp"
                 android:layout_marginBottom="8dp" />
@@ -49,7 +70,7 @@
                 android:id="@+id/inputRoll"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:hint="Enter Roll Number"
+                android:hint="@string/hint_roll"
                 android:inputType="text"
                 android:padding="8dp"
                 android:layout_marginBottom="12dp" />
@@ -58,27 +79,27 @@
                 android:id="@+id/btnCapture"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Capture Sample"
+                android:text="@string/btn_capture"
                 android:layout_marginBottom="8dp" />
 
             <Button
                 android:id="@+id/btnSubmit"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Submit Enrollment"
+                android:text="@string/btn_submit"
                 android:layout_marginBottom="8dp" />
 
             <Button
                 android:id="@+id/btnBack"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Back" />
+                android:text="@string/btn_back" />
 
             <TextView
                 android:id="@+id/txtInstruction"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Align your face in the frame and tap Capture."
+                android:text="@string/msg_capture_instruction"
                 android:gravity="center"
                 android:paddingTop="12dp"
                 android:textAppearance="?attr/textAppearanceBody2" />

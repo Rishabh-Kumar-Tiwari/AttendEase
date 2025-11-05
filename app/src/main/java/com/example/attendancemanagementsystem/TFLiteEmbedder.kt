@@ -16,15 +16,12 @@ class TFLiteEmbedder private constructor(
     private val inputShape: IntArray,
     private val outputShape: IntArray
 ) {
-    // lock to ensure only one thread calls interpreter.run at a time
     private val inferLock = Any()
 
     companion object {
         private const val TAG = "TFLiteEmbedder"
 
-        /**
-         * Load interpreter from assets file name, returns a TFLiteEmbedder instance.
-         */
+        //Load interpreter from assets file name, returns a TFLiteEmbedder instance.
         fun createFromAssets(context: Context, assetName: String): TFLiteEmbedder {
             val fd = context.assets.openFd(assetName)
             val stream = FileInputStream(fd.fileDescriptor)
@@ -40,8 +37,8 @@ class TFLiteEmbedder private constructor(
             // create interpreter
             val interpreter = Interpreter(modelBuffer, options)
 
-            val inputShape = interpreter.getInputTensor(0).shape() // e.g. [1,112,112,3]
-            val outputShape = interpreter.getOutputTensor(0).shape() // e.g. [1,128]
+            val inputShape = interpreter.getInputTensor(0).shape()
+            val outputShape = interpreter.getOutputTensor(0).shape()
             Log.i(TAG, "Interpreter loaded. inputShape=${inputShape.joinToString()} outputShape=${outputShape.joinToString()}")
             return TFLiteEmbedder(interpreter, inputShape, outputShape)
         }
@@ -51,7 +48,7 @@ class TFLiteEmbedder private constructor(
      * Runs inference for a given face bitmap (should match model input dimensions).
      * Returns L2-normalized embedding float array.
      *
-     * This method synchronizes on a lock to prevent concurrent native calls which can cause SIGSEGV.
+     * This method synchronizes on a lock to prevent concurrent native calls.
      */
     fun getEmbedding(faceBitmap: Bitmap): FloatArray {
         val h = inputShape.getOrNull(1) ?: throw IllegalStateException("Invalid input shape")

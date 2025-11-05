@@ -2,12 +2,7 @@ package com.example.attendancemanagementsystem
 
 import kotlin.math.sqrt
 
-/**
- * Simple in-memory recognition manager that stores embeddings and performs
- * brute-force cosine-similarity matching.
- *
- * This matches the usage in MainActivity: recognize(embedding: FloatArray) -> MatchResult?
- */
+// Simple in-memory recognition manager that stores embeddings and performs brute-force cosine-similarity matching.
 data class MatchResult(val id: String, val confidence: Float)
 
 object RecognitionManager {
@@ -20,7 +15,12 @@ object RecognitionManager {
         list.addAll(embeddings)
     }
 
-    /** Clear all enrolled data (for debug) */
+    /** Remove a single student's embeddings at runtime */
+    fun remove(studentId: String) {
+        store.remove(studentId)
+    }
+
+    /** Clear all enrolled data (for debug or class-switch) */
     fun clear() {
         store.clear()
     }

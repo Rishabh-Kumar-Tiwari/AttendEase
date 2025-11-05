@@ -3,11 +3,10 @@
 
     <!-- Permissions -->
     <uses-permission android:name="android.permission.CAMERA" />
-    <!-- For Android 13+ apps that may post notifications (lint requires declaration if libraries use NotificationTarget) -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <uses-permission android:name="android.permission.INTERNET" />
 
-    <!-- Declare camera as optional hardware feature (fixes lint for ChromeOS / Play) -->
+    <!-- Declare camera as optional -->
     <uses-feature android:name="android.hardware.camera" android:required="false" />
     <uses-feature android:name="android.hardware.camera.front" android:required="false" />
 
@@ -17,9 +16,10 @@
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
-        android:theme="@style/Theme.AttendanceManagementSystem">
+        android:theme="@style/Theme.AttendanceManagementSystem"
+        android:usesCleartextTraffic="true">
 
-        <!-- Splash is launcher -->
+        <!-- Launcher -->
         <activity
             android:name=".SplashActivity"
             android:exported="true"
@@ -30,17 +30,21 @@
             </intent-filter>
         </activity>
 
+        <!-- Main flow -->
         <activity android:name=".MainActivity" android:exported="true" />
         <activity android:name=".EnrollmentActivity" android:exported="false" />
         <activity android:name=".AttendanceActivity" android:exported="false" />
+        <activity android:name=".ClassSelectionActivity" android:exported="false" android:label="Select Class" />
+        <activity android:name=".ClassDetailActivity" android:exported="false" android:label="Class Details" />
 
-        <!-- FileProvider for sharing CSV -->
+        <!-- FileProvider for CSV exports -->
         <provider
             android:name="androidx.core.content.FileProvider"
             android:authorities="${applicationId}.fileprovider"
             android:exported="false"
             android:grantUriPermissions="true">
-            <meta-data android:name="android.support.FILE_PROVIDER_PATHS"
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
                 android:resource="@xml/file_paths" />
         </provider>
     </application>

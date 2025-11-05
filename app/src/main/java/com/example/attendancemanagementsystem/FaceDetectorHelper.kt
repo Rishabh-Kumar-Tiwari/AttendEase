@@ -3,7 +3,6 @@ package com.example.attendancemanagementsystem
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.ImageFormat
-import android.graphics.Rect
 import android.media.Image
 import android.util.Log
 import com.google.mlkit.vision.common.InputImage
@@ -11,9 +10,6 @@ import com.google.mlkit.vision.face.Face
 import com.google.mlkit.vision.face.FaceDetection
 import com.google.mlkit.vision.face.FaceDetector
 import com.google.mlkit.vision.face.FaceDetectorOptions
-import java.nio.ByteBuffer
-import kotlin.math.max
-import kotlin.math.min
 
 class FaceDetectorHelper(private val context: Context) {
 
@@ -29,9 +25,7 @@ class FaceDetectorHelper(private val context: Context) {
         detector = FaceDetection.getClient(options)
     }
 
-    /**
-     * Detect faces in InputImage and forward result to callback.
-     */
+    // Detect faces in InputImage and forward result to callback.
     fun detect(inputImage: InputImage, cb: (List<Face>) -> Unit) {
         detector.process(inputImage)
             .addOnSuccessListener { faces ->
@@ -43,9 +37,6 @@ class FaceDetectorHelper(private val context: Context) {
             }
     }
 
-    /**
-     * Convert Media.Image + rotation to Bitmap (useful for alignment / cropping).
-     */
     fun mediaImageToBitmap(mediaImage: Image, rotationDegrees: Int): Bitmap {
         val nv21 = yuv420ToNv21(mediaImage)
         val yuvImage = android.graphics.YuvImage(nv21, ImageFormat.NV21, mediaImage.width, mediaImage.height, null)
@@ -62,9 +53,9 @@ class FaceDetectorHelper(private val context: Context) {
     }
 
     private fun yuv420ToNv21(image: Image): ByteArray {
-        val yBuffer = image.planes[0].buffer // Y
-        val uBuffer = image.planes[1].buffer // U
-        val vBuffer = image.planes[2].buffer // V
+        val yBuffer = image.planes[0].buffer
+        val uBuffer = image.planes[1].buffer
+        val vBuffer = image.planes[2].buffer
 
         val ySize = yBuffer.remaining()
         val uSize = uBuffer.remaining()
@@ -73,14 +64,9 @@ class FaceDetectorHelper(private val context: Context) {
         val nv21 = ByteArray(ySize + uSize + vSize)
 
         yBuffer.get(nv21, 0, ySize)
-        val chromaRowStride = image.planes[1].rowStride
-        val chromaPixelStride = image.planes[1].pixelStride
 
         var pos = ySize
-        val width = image.width
-        val height = image.height
 
-        // Interleave V and U to NV21
         val u = ByteArray(uSize)
         val v = ByteArray(vSize)
         uBuffer.get(u)

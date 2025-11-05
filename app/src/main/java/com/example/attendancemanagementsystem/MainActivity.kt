@@ -3,8 +3,6 @@ package com.example.attendancemanagementsystem
 import android.Manifest
 import android.content.Intent
 import android.content.pm.PackageManager
-import android.graphics.Bitmap
-import android.graphics.Rect
 import android.os.Bundle
 import android.util.Log
 import android.widget.Toast
@@ -14,6 +12,7 @@ import androidx.camera.core.CameraSelector
 import androidx.camera.core.ImageAnalysis
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.core.content.ContextCompat
+import androidx.core.view.WindowCompat
 import androidx.lifecycle.lifecycleScope
 import com.example.attendancemanagementsystem.databinding.ActivityMainBinding
 import kotlinx.coroutines.Dispatchers
@@ -22,137 +21,212 @@ import kotlinx.coroutines.launch
 import java.util.concurrent.Executors
 
 class MainActivity : AppCompatActivity() {
+
     private lateinit var binding: ActivityMainBinding
     private val tag = "MainActivity"
 
     private val cameraExecutor = Executors.newSingleThreadExecutor()
+    private val inferenceExecutor = Executors.newSingleThreadExecutor()
+    private val inferenceDispatcher = inferenceExecutor.asCoroutineDispatcher()
+
     private var analyzer: CameraAnalyzer? = null
     private var embedder: TFLiteEmbedder? = null
     private val detectorHelper by lazy { FaceDetectorHelper(this) }
     private val recognitionManager = RecognitionManager
 
-    // Single-threaded executor specifically for inference to avoid concurrent Interpreter.run calls.
-    private val inferenceExecutor = Executors.newSingleThreadExecutor()
-    private val inferenceDispatcher = inferenceExecutor.asCoroutineDispatcher()
-
-    // smoothing + debounce
     private var autoMarkEnabled = true
     private val consecutiveNeeded = 3
     private val recognitionCounters = mutableMapOf<String, Int>()
     private val recentlyMarked = mutableMapOf<String, Long>()
     private val recognitionCooldownMs = 10_000L
 
-    private val permissionLauncher = registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
-        if (granted) startCamera() else showToast("Camera permission is required")
-    }
+    private var selectedClassId: String = ""
+    private var selectedClassName: String = ""
+
+    // camera lens state
+    private var lensSelector: CameraSelector = CameraSelector.DEFAULT_FRONT_CAMERA
+    private var isFrontFacing: Boolean = true
+
+    private val permissionLauncher =
+        registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
+            if (granted) startCamera() else showToast("Camera permission is required")
+        }
+
+    private val selectClassLauncher =
+        registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+            if (result.resultCode == RESULT_OK && result.data != null) {
+                selectedClassId = result.data!!.getStringExtra("classId") ?: ""
+                selectedClassName = result.data!!.getStringExtra("className") ?: ""
+                if (selectedClassId.isNotBlank()) {
+                    showToast("Selected class: $selectedClassName")
+                    loadEmbeddingsForSelectedClass()
+                    if (hasCameraPermission()) startCamera() else requestCameraPermission()
+                } else {
+                    showToast("No class selected")
+                }
+            } else if (selectedClassId.isBlank()) {
+                showToast("Please select a class to start")
+            }
+        }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        WindowCompat.setDecorFitsSystemWindows(window, true)
+
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        // initial UI
-        binding.txtStatus.text = "Status: Idle"
-        binding.txtRecognizedName.text = "No one detected"
-        binding.txtRecognizedId.text = ""
-        binding.btnMarkPresent.isEnabled = false
-        binding.txtMode.text = "Mode: Auto Mark"
-        binding.switchAutoMark.isChecked = true
+        setSupportActionBar(binding.topAppBar)
 
-        // listeners
-        binding.btnStart.setOnClickListener {
-            if (hasCameraPermission()) startCamera() else requestCameraPermission()
+        initUI()
+        loadModelAsync()
+        promptSelectClassAlways()
+    }
+
+    private fun initUI() = with(binding) {
+        txtStatus.text = "Status: Idle"
+        txtRecognizedName.text = "No one detected"
+        txtRecognizedId.text = ""
+        btnMarkPresent.isEnabled = false
+        txtMode.text = "Mode: Auto Mark"
+        switchAutoMark.isChecked = true
+
+        btnStart.setOnClickListener {
+            if (selectedClassId.isNotBlank()) {
+                if (hasCameraPermission()) startCamera() else requestCameraPermission()
+            } else promptSelectClassAlways()
         }
-        binding.btnStop.setOnClickListener { stopCamera() }
-        binding.btnEnroll.setOnClickListener { startActivity(Intent(this, EnrollmentActivity::class.java)) }
-        binding.btnAttendance.setOnClickListener { startActivity(Intent(this, AttendanceActivity::class.java)) }
-        binding.fabAttendance.setOnClickListener { startActivity(Intent(this, AttendanceActivity::class.java)) }
 
-        binding.switchAutoMark.setOnCheckedChangeListener { _, checked ->
+        btnStop.setOnClickListener { stopCamera() }
+
+        btnEnroll.setOnClickListener {
+            val i = Intent(this@MainActivity, EnrollmentActivity::class.java)
+            if (selectedClassId.isNotBlank()) i.putExtra("classId", selectedClassId)
+            startActivity(i)
+        }
+
+        fabAttendance.setOnClickListener {
+            val i = Intent(this@MainActivity, AttendanceActivity::class.java)
+            if (selectedClassId.isNotBlank()) i.putExtra("classId", selectedClassId)
+            startActivity(i)
+        }
+
+        // Camera flip: toggle lens and restart camera if already running
+        btnSwitchCamera.setOnClickListener {
+            toggleCameraLens()
+        }
+
+        switchAutoMark.setOnCheckedChangeListener { _, checked ->
             autoMarkEnabled = checked
-            binding.txtMode.text = if (checked) "Mode: Auto Mark" else "Mode: Manual Mark"
+            txtMode.text = if (checked) "Mode: Auto Mark" else "Mode: Manual Mark"
             recognitionCounters.clear()
-            binding.btnMarkPresent.isEnabled = !checked && binding.txtRecognizedId.tag != null
+            btnMarkPresent.isEnabled = !checked && txtRecognizedId.tag != null
         }
 
-        binding.btnMarkPresent.setOnClickListener {
-            val id = binding.txtRecognizedId.tag as? String
+        btnMarkPresent.setOnClickListener {
+            val id = txtRecognizedId.tag as? String
             if (id != null) markStudentManually(id) else showToast("No recognized student")
         }
 
-        binding.btnUndoLast.setOnClickListener {
-            lifecycleScope.launch(Dispatchers.IO) {
-                val removed = UndoHelper.removeLastRecord(this@MainActivity)
-                runOnUiThread {
-                    if (removed) {
-                        showToast("Last attendance removed")
-                        refreshAttendanceCount()
-                    } else showToast("Nothing to undo")
-                }
-            }
-        }
+        refreshAttendanceCount()
+    }
 
-        // load enrollments + model in background
+    private fun toggleCameraLens() {
+        // flip front/back
+        isFrontFacing = !isFrontFacing
+        lensSelector = if (isFrontFacing) CameraSelector.DEFAULT_FRONT_CAMERA else CameraSelector.DEFAULT_BACK_CAMERA
+
+        // if camera is active, rebind to apply new lens
+        try {
+            val cp = ProcessCameraProvider.getInstance(this)
+            cp.addListener({
+                val cameraProvider = cp.get()
+                try {
+                    cameraProvider.unbindAll()
+                    startCamera()
+                } catch (e: Exception) {
+                    Log.w(tag, "toggleCameraLens rebind failed: ${e.message}")
+                }
+            }, ContextCompat.getMainExecutor(this))
+        } catch (e: Exception) {
+            Log.w(tag, "toggleCameraLens failed: ${e.message}")
+        }
+    }
+
+    private fun promptSelectClassAlways() {
+        val i = Intent(this, ClassSelectionActivity::class.java)
+        selectClassLauncher.launch(i)
+    }
+
+    private fun loadModelAsync() {
         lifecycleScope.launch(Dispatchers.IO) {
-            try { EmbeddingStorage.loadIntoRecognitionManager(this@MainActivity) } catch (_: Exception) {}
-            try { embedder = TFLiteEmbedder.createFromAssets(this@MainActivity, "facenet.tflite") } catch (e: Exception) {
+            try {
+                embedder = TFLiteEmbedder.createFromAssets(this@MainActivity, "facenet.tflite")
+            } catch (e: Exception) {
                 Log.w(tag, "Embedder load failed: ${e.message}")
             }
         }
+    }
 
-        refreshAttendanceCount()
-
-        // auto-start if permission already granted
-        if (hasCameraPermission()) startCamera() else requestCameraPermission()
+    private fun loadEmbeddingsForSelectedClass() {
+        if (selectedClassId.isBlank()) {
+            RecognitionManager.clear()
+            return
+        }
+        val room = ClassStorage.getClass(this, selectedClassId)
+        val ids = room?.studentIds ?: emptyList()
+        lifecycleScope.launch(Dispatchers.IO) {
+            try {
+                EmbeddingStorage.loadIntoRecognitionManager(this@MainActivity, ids)
+            } catch (e: Exception) {
+                Log.w(tag, "Failed to load embeddings: ${e.message}")
+            }
+        }
     }
 
     private fun hasCameraPermission(): Boolean =
-        ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED
+        ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) ==
+                PackageManager.PERMISSION_GRANTED
 
     private fun requestCameraPermission() {
         permissionLauncher.launch(Manifest.permission.CAMERA)
     }
 
     private fun startCamera() {
+        if (selectedClassId.isBlank()) {
+            showToast("Select a class first")
+            return
+        }
+
         val cp = ProcessCameraProvider.getInstance(this)
         cp.addListener({
             val cameraProvider = cp.get()
             try {
                 cameraProvider.unbindAll()
-
-                val previewUseCase = androidx.camera.core.Preview.Builder().build()
+                val preview = androidx.camera.core.Preview.Builder().build()
                     .also { it.setSurfaceProvider(binding.previewView.surfaceProvider) }
 
-                val selector = CameraSelector.DEFAULT_FRONT_CAMERA
-
+                val selector = lensSelector
                 val analysis = ImageAnalysis.Builder()
                     .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
                     .build()
 
-                analyzer = CameraAnalyzer(this, detectorHelper) { faceBitmap: Bitmap, faceRect: Rect, bmpW: Int, bmpH: Int ->
-                    // Update overlay on UI thread
+                analyzer?.stop()
+                analyzer = CameraAnalyzer(detectorHelper) { faceBitmap, faceRect, bmpW, bmpH ->
                     runOnUiThread {
                         val pvW = binding.previewView.width
                         val pvH = binding.previewView.height
-                        binding.overlayView.setBoundingBox(faceRect, bmpW, bmpH, pvW, pvH, true)
+                        binding.overlayView.setBoundingBox(faceRect, bmpW, bmpH, pvW, pvH, isFrontFacing)
                     }
 
-                    val ed = embedder
-                    if (ed == null) {
-                        runOnUiThread { binding.txtStatus.text = "Face detected (model not loaded)" }
-                        return@CameraAnalyzer
-                    }
-
-                    // Use dedicated single-thread inference dispatcher to serialize inference calls
+                    val ed = embedder ?: return@CameraAnalyzer
                     lifecycleScope.launch(inferenceDispatcher) {
                         try {
                             val emb = ed.getEmbedding(faceBitmap)
                             val match = recognitionManager.recognize(emb)
-                            if (match != null) {
-                                handleMatch(match.id, match.confidence)
-                            } else {
-                                runOnUiThread { showRecognized(null, 0f) }
-                            }
+                            if (match != null) handleMatch(match.id, match.confidence)
+                            else runOnUiThread { showRecognized(null, 0f) }
                         } catch (e: Exception) {
                             Log.w(tag, "Recognition error: ${e.message}")
                             runOnUiThread { binding.txtStatus.text = "Recognition error" }
@@ -161,8 +235,9 @@ class MainActivity : AppCompatActivity() {
                 }
 
                 analysis.setAnalyzer(cameraExecutor, analyzer!!)
-                cameraProvider.bindToLifecycle(this, selector, previewUseCase, analysis)
-                runOnUiThread { binding.txtStatus.text = "Camera started" }
+                cameraProvider.bindToLifecycle(this, selector, preview, analysis)
+                runOnUiThread { binding.txtStatus.text = "Camera started (${if (isFrontFacing) "Front" else "Back"}) for $selectedClassName" }
+
             } catch (e: Exception) {
                 showToast("Camera start failed: ${e.localizedMessage}")
             }
@@ -178,33 +253,33 @@ class MainActivity : AppCompatActivity() {
                 runOnUiThread { binding.txtStatus.text = "Recently marked: ${displayFromId(studentId)}" }
                 return
             }
+
             val cnt = (recognitionCounters[studentId] ?: 0) + 1
             recognitionCounters[studentId] = cnt
             runOnUiThread { showRecognized(studentId, confidence, cnt) }
+
             if (cnt >= consecutiveNeeded) {
                 recognitionCounters[studentId] = 0
                 recentlyMarked[studentId] = now
+
                 lifecycleScope.launch(Dispatchers.IO) {
                     val (roll, name) = parseId(studentId)
-                    val marked = AttendanceManager.markIfNotMarked(this@MainActivity, studentId, name, roll)
+                    val marked = ClassAttendanceManager.markIfNotMarked(
+                        this@MainActivity, selectedClassId, studentId, name, roll
+                    )
                     runOnUiThread {
                         if (marked) {
                             showToast("Marked present: $name")
                             binding.txtStatus.text = "Auto-marked: $name"
                             refreshAttendanceCount()
-                        } else {
-                            binding.txtStatus.text = "Already marked: $name"
-                        }
+                        } else binding.txtStatus.text = "Already marked: $name"
                     }
                 }
             }
-        } else {
-            runOnUiThread { showRecognized(studentId, confidence, 0) }
-        }
+        } else runOnUiThread { showRecognized(studentId, confidence) }
     }
 
-    // give consecutiveCount a default so older calls don't need to pass it
-    private fun showRecognized(studentId: String?, confidence: Float, consecutiveCount: Int = 0) {
+    private fun showRecognized(studentId: String?, confidence: Float, count: Int = 0) {
         if (studentId == null) {
             binding.txtRecognizedName.text = "No one detected"
             binding.txtRecognizedId.text = ""
@@ -218,13 +293,16 @@ class MainActivity : AppCompatActivity() {
         binding.txtRecognizedId.text = "Roll: $roll | Conf: ${"%.2f".format(confidence)}"
         binding.txtRecognizedId.tag = studentId
         binding.btnMarkPresent.isEnabled = !autoMarkEnabled
-        binding.txtStatus.text = if (consecutiveCount > 0) "Recognizing $name ($consecutiveCount/$consecutiveNeeded)" else "Detected: $name"
+        binding.txtStatus.text =
+            if (count > 0) "Recognizing $name ($count/$consecutiveNeeded)" else "Detected: $name"
     }
 
     private fun markStudentManually(studentId: String) {
         lifecycleScope.launch(Dispatchers.IO) {
             val (roll, name) = parseId(studentId)
-            val marked = AttendanceManager.markIfNotMarked(this@MainActivity, studentId, name, roll)
+            val marked = ClassAttendanceManager.markIfNotMarked(
+                this@MainActivity, selectedClassId, studentId, name, roll
+            )
             runOnUiThread {
                 if (marked) {
                     showToast("Marked present: $name")
@@ -240,11 +318,8 @@ class MainActivity : AppCompatActivity() {
 
     private fun parseId(studentId: String): Pair<String, String> {
         val idx = studentId.indexOf('_')
-        return if (idx <= 0) Pair("", studentId) else {
-            val roll = studentId.substring(0, idx)
-            val name = studentId.substring(idx + 1).replace("_", " ")
-            Pair(roll, name)
-        }
+        return if (idx <= 0) Pair("", studentId)
+        else Pair(studentId.substring(0, idx), studentId.substring(idx + 1).replace("_", " "))
     }
 
     private fun displayFromId(studentId: String): String {
@@ -266,14 +341,11 @@ class MainActivity : AppCompatActivity() {
     private fun refreshAttendanceCount() {
         lifecycleScope.launch(Dispatchers.IO) {
             try {
-                val list = AttendanceManager.getTodayRecords(this@MainActivity)
+                val list = ClassAttendanceManager.getRecordsForDate(
+                    this@MainActivity, java.util.Date(), selectedClassId
+                )
                 runOnUiThread {
-                    // Safely update if layout has this view (it will)
-                    try {
-                        binding.txtAttendanceCount.text = "Today's marked: ${list.size}"
-                    } catch (_: Exception) {
-                        binding.txtStatus.text = "Marked: ${list.size}"
-                    }
+                    binding.txtAttendanceCount.text = "Today's marked: ${list.size}"
                 }
             } catch (e: Exception) {
                 Log.w(tag, "refreshAttendanceCount error: ${e.message}")
@@ -284,26 +356,26 @@ class MainActivity : AppCompatActivity() {
     override fun onResume() {
         super.onResume()
         refreshAttendanceCount()
-        lifecycleScope.launch(Dispatchers.IO) { EmbeddingStorage.loadIntoRecognitionManager(this@MainActivity) }
+        loadEmbeddingsForSelectedClass()
     }
 
     override fun onDestroy() {
         super.onDestroy()
         cameraExecutor.shutdown()
         try { analyzer?.stop() } catch (_: Exception) {}
-        try {
-            embedder?.close()
-        } catch (_: Exception) {}
-
-        // shut down inference executor
-        try {
-            inferenceExecutor.shutdownNow()
-        } catch (e: Exception) {
+        try { embedder?.close() } catch (_: Exception) {}
+        try { inferenceExecutor.shutdownNow() } catch (e: Exception) {
             Log.w(tag, "inferenceExecutor shutdown error: ${e.message}")
         }
     }
 
+    @Deprecated("This method has been deprecated in favor of using the\n      {@link OnBackPressedDispatcher} via {@link #getOnBackPressedDispatcher()}.\n      The OnBackPressedDispatcher controls how back button events are dispatched\n      to one or more {@link OnBackPressedCallback} objects.")
+    override fun onBackPressed() {
+        val intent = Intent(this, ClassSelectionActivity::class.java)
+        selectClassLauncher.launch(intent)
+    }
+
     private fun showToast(msg: String) {
-        runOnUiThread { Toast.makeText(this@MainActivity, msg, Toast.LENGTH_SHORT).show() }
+        runOnUiThread { Toast.makeText(this, msg, Toast.LENGTH_SHORT).show() }
     }
 }

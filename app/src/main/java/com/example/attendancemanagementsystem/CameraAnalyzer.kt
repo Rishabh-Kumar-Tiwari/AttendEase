@@ -1,7 +1,6 @@
 package com.example.attendancemanagementsystem
 
 import android.annotation.SuppressLint
-import android.content.Context
 import android.graphics.Bitmap
 import android.media.Image
 import android.util.Log
@@ -10,17 +9,7 @@ import androidx.camera.core.ImageProxy
 import com.google.mlkit.vision.common.InputImage
 import com.google.mlkit.vision.face.Face
 
-/**
- * Analyzer that uses ML Kit face detector. For each frame it:
- *  - builds an InputImage from mediaImage + rotation
- *  - runs detector
- *  - converts Media.Image -> rotated Bitmap (same orientation as detection)
- *  - for the first detected face, creates a cropped-aligned face bitmap via FaceAligner
- *  - invokes the callback with:
- *      (alignedFaceBitmap, face.boundingBox (in bitmap coords), bitmapWidth, bitmapHeight)
- */
 class CameraAnalyzer(
-    private val context: Context,
     private val detectorHelper: FaceDetectorHelper,
     private val onFaceDetected: (faceBitmap: Bitmap, faceBoundingBox: android.graphics.Rect, bitmapWidth: Int, bitmapHeight: Int) -> Unit
 ) : ImageAnalysis.Analyzer {

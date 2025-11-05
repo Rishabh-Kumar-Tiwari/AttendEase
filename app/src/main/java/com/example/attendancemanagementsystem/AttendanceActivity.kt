@@ -4,7 +4,6 @@ import android.app.DatePickerDialog
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
-import android.os.Environment
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.FileProvider
@@ -23,33 +22,51 @@ class AttendanceActivity : AppCompatActivity() {
     private val adapter = AttendanceAdapter()
     private val dayFormat = SimpleDateFormat("yyyy-MM-dd", Locale.US)
     private var currentDate = Date()
+    private var classId: String = ""
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityAttendanceBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
+        setSupportActionBar(binding.toolbarAttendance)
+
         binding.recycler.layoutManager = LinearLayoutManager(this)
         binding.recycler.adapter = adapter
+
+        classId = intent.getStringExtra("classId") ?: ""
+
+        if (classId.isBlank()) {
+            Toast.makeText(this, "No class specified — showing no records", Toast.LENGTH_LONG).show()
+        }
 
         updateDateDisplay()
         loadRecordsFor(currentDate)
 
-        binding.btnPickDate.setOnClickListener {
-            showDatePicker()
-        }
+        binding.btnPickDate.setOnClickListener { showDatePicker() }
 
+        // Export now directly shares the master CSV
         binding.btnExport.setOnClickListener {
-            exportCsvFor(currentDate)
-        }
-
-        binding.btnRefresh.setOnClickListener {
-            loadRecordsFor(currentDate)
-        }
-
-        adapter.onDeleteClick = { pos, record ->
             lifecycleScope.launch(Dispatchers.IO) {
-                val removed = AttendanceManager.removeRecord(this@AttendanceActivity, currentDate, record)
+                try {
+                    val outFile: File = ClassAttendanceManager.getMasterCsvFile(this@AttendanceActivity, classId)
+                    withContext(Dispatchers.Main) {
+                        showToast("Master CSV ready: ${outFile.name}")
+                        shareFile(outFile, "text/csv")
+                    }
+                } catch (e: Exception) {
+                    withContext(Dispatchers.Main) {
+                        showToast("Export failed: ${e.localizedMessage}")
+                    }
+                }
+            }
+        }
+
+        binding.btnRefresh.setOnClickListener { loadRecordsFor(currentDate) }
+
+        adapter.onDeleteClick = { _, record ->
+            lifecycleScope.launch(Dispatchers.IO) {
+                val removed = ClassAttendanceManager.removeRecord(this@AttendanceActivity, currentDate, classId, record)
                 withContext(Dispatchers.Main) {
                     if (removed) {
                         showToast("Record removed")
@@ -87,7 +104,7 @@ class AttendanceActivity : AppCompatActivity() {
 
     private fun loadRecordsFor(date: Date) {
         lifecycleScope.launch(Dispatchers.IO) {
-            val list = AttendanceManager.getRecordsForDate(this@AttendanceActivity, date)
+            val list = ClassAttendanceManager.getRecordsForDate(this@AttendanceActivity, date, classId)
             withContext(Dispatchers.Main) {
                 adapter.submitList(list)
                 binding.txtCount.text = "Records: ${list.size}"
@@ -95,31 +112,18 @@ class AttendanceActivity : AppCompatActivity() {
         }
     }
 
-    private fun exportCsvFor(date: Date) {
-        lifecycleScope.launch(Dispatchers.IO) {
-            try {
-                val outFile = AttendanceManager.exportCsv(this@AttendanceActivity, date)
-                withContext(Dispatchers.Main) {
-                    showToast("CSV exported: ${outFile.name}")
-                    // Offer share intent
-                    val uri: Uri = FileProvider.getUriForFile(
-                        this@AttendanceActivity,
-                        "${applicationContext.packageName}.fileprovider",
-                        outFile
-                    )
-                    val share = Intent(Intent.ACTION_SEND).apply {
-                        type = "text/csv"
-                        putExtra(Intent.EXTRA_STREAM, uri)
-                        addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-                    }
-                    startActivity(Intent.createChooser(share, "Share CSV"))
-                }
-            } catch (e: Exception) {
-                withContext(Dispatchers.Main) {
-                    showToast("Export failed: ${e.localizedMessage}")
-                }
-            }
+    private fun shareFile(file: File, mime: String) {
+        val uri: Uri = FileProvider.getUriForFile(
+            this,
+            "${applicationContext.packageName}.fileprovider",
+            file
+        )
+        val share = Intent(Intent.ACTION_SEND).apply {
+            type = mime
+            putExtra(Intent.EXTRA_STREAM, uri)
+            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
         }
+        startActivity(Intent.createChooser(share, "Share CSV"))
     }
 
     private fun showToast(msg: String) {

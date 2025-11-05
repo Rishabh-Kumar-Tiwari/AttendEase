@@ -3,7 +3,6 @@ package com.example.attendancemanagementsystem
 import android.Manifest
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
-import android.graphics.Rect
 import android.os.Bundle
 import android.util.Log
 import android.widget.Toast
@@ -28,6 +27,13 @@ class EnrollmentActivity : AppCompatActivity() {
     private val collectedEmbeddings = mutableListOf<FloatArray>()
     private var lastAlignedFaceBitmap: Bitmap? = null
 
+    private var classId: String = ""
+    private var editingStudentId: String = ""
+
+    // camera lens state for enrollment
+    private var lensSelector: CameraSelector = CameraSelector.DEFAULT_FRONT_CAMERA
+    private var isFrontFacing: Boolean = true
+
     private val requestPermissionLauncher =
         registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
             if (granted) startCamera() else Toast.makeText(this, "Camera permission required", Toast.LENGTH_LONG).show()
@@ -38,17 +44,29 @@ class EnrollmentActivity : AppCompatActivity() {
         binding = ActivityEnrollBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        val previewView = findViewById<androidx.camera.view.PreviewView>(R.id.previewView)
-        val overlayView = findViewById<OverlayView>(R.id.overlayView)
+        setSupportActionBar(binding.toolbarEnroll)
+
+        classId = intent.getStringExtra("classId") ?: ""
+        editingStudentId = intent.getStringExtra("studentId") ?: ""
 
         binding.btnBack.setOnClickListener { finish() }
 
+        // load model
         CoroutineScope(Dispatchers.IO).launch {
             try {
                 embedder = TFLiteEmbedder.createFromAssets(this@EnrollmentActivity, "facenet.tflite")
                 Log.i("EnrollmentActivity", "Embedder loaded")
             } catch (e: Exception) {
                 Log.w("EnrollmentActivity", "Embedder not loaded: ${e.message}")
+            }
+        }
+
+        if (editingStudentId.isNotBlank()) {
+            val s = StudentStorage.getStudent(this, editingStudentId)
+            if (s != null) {
+                binding.inputName.setText(s.name)
+                binding.inputRoll.setText(s.roll)
+                binding.txtInstruction.text = "Editing student: ${s.name}"
             }
         }
 
@@ -78,6 +96,26 @@ class EnrollmentActivity : AppCompatActivity() {
             }
         }
 
+        // flip camera button
+        binding.btnSwitchCameraEnroll.setOnClickListener {
+            isFrontFacing = !isFrontFacing
+            lensSelector = if (isFrontFacing) CameraSelector.DEFAULT_FRONT_CAMERA else CameraSelector.DEFAULT_BACK_CAMERA
+            try {
+                val cp = ProcessCameraProvider.getInstance(this)
+                cp.addListener({
+                    val provider = cp.get()
+                    try {
+                        provider.unbindAll()
+                        startCamera()
+                    } catch (e: Exception) {
+                        Log.w("EnrollmentActivity", "rebind after flip failed: ${e.message}")
+                    }
+                }, ContextCompat.getMainExecutor(this))
+            } catch (e: Exception) {
+                Log.w("EnrollmentActivity", "flip camera failed: ${e.message}")
+            }
+        }
+
         binding.btnSubmit.setOnClickListener {
             val name = binding.inputName.text.toString().trim()
             val roll = binding.inputRoll.text.toString().trim()
@@ -85,18 +123,31 @@ class EnrollmentActivity : AppCompatActivity() {
                 Toast.makeText(this, "Enter name and roll", Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
             }
-            if (collectedEmbeddings.isEmpty()) {
-                Toast.makeText(this, "Capture at least one sample", Toast.LENGTH_SHORT).show()
-                return@setOnClickListener
-            }
 
             CoroutineScope(Dispatchers.IO).launch {
                 try {
-                    val id = "${roll}_${name.replace("\\s+".toRegex(), "_")}"
-                    EmbeddingStorage.saveEnrollment(applicationContext, id, collectedEmbeddings)
-                    RecognitionManager.enroll(id, collectedEmbeddings)
+                    val id = if (editingStudentId.isNotBlank()) editingStudentId else "${roll}_${name.replace("\\s+".toRegex(), "_")}"
+
+                    val student = Student(id = id, roll = roll, name = name, classId = classId)
+                    StudentStorage.createOrUpdate(applicationContext, student)
+
+                    if (collectedEmbeddings.isNotEmpty()) {
+                        EmbeddingStorage.saveEnrollment(applicationContext, id, collectedEmbeddings)
+                        RecognitionManager.enroll(id, collectedEmbeddings)
+                    }
+
+                    if (classId.isNotBlank()) {
+                        ClassStorage.addStudentToClass(applicationContext, classId, id)
+
+                        try {
+                            AttendanceStorage.ensureMasterCsvHasRoster(applicationContext, classId)
+                        } catch (e: Exception) {
+                            Log.w("EnrollmentActivity", "ensureMasterCsvHasRoster failed: ${e.message}")
+                        }
+                    }
+
                     runOnUiThread {
-                        Toast.makeText(this@EnrollmentActivity, "Enrolled $name ($id) successfully", Toast.LENGTH_LONG).show()
+                        Toast.makeText(this@EnrollmentActivity, "Saved $name ($id) successfully", Toast.LENGTH_LONG).show()
                         finish()
                     }
                 } catch (e: Exception) {
@@ -125,16 +176,17 @@ class EnrollmentActivity : AppCompatActivity() {
                 val preview = androidx.camera.core.Preview.Builder().build().also {
                     it.setSurfaceProvider(previewView.surfaceProvider)
                 }
-                val selector = CameraSelector.DEFAULT_FRONT_CAMERA
+                val selector = lensSelector
                 val analysis = ImageAnalysis.Builder()
                     .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
                     .build()
-                analyzer = CameraAnalyzer(this, detectorHelper) { alignedFaceBmp, faceRect, bmpW, bmpH ->
+                analyzer?.stop()
+                analyzer = CameraAnalyzer(detectorHelper) { alignedFaceBmp, faceRect, bmpW, bmpH ->
                     lastAlignedFaceBitmap = alignedFaceBmp
                     runOnUiThread {
                         val pvW = previewView.width
                         val pvH = previewView.height
-                        overlayView.setBoundingBox(faceRect, bmpW, bmpH, pvW, pvH, true)
+                        overlayView.setBoundingBox(faceRect, bmpW, bmpH, pvW, pvH, isFrontFacing)
                     }
                 }
                 analysis.setAnalyzer(cameraExecutor, analyzer!!)

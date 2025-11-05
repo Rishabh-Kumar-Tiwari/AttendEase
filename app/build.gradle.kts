@@ -39,9 +39,6 @@ android {
     buildFeatures {
         viewBinding = true
     }
-
-    // Optional: if you want to reduce ABI conflicts you can enable ABI splits later.
-    // splits { /* ... */ }
 }
 
 dependencies {
@@ -51,10 +48,11 @@ dependencies {
     implementation(libs.material)
     implementation(libs.androidx.activity)
     implementation(libs.androidx.constraintlayout)
+    implementation(libs.androidx.recyclerview)
+    implementation(libs.androidx.fragment)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
-    implementation("com.google.android.material:material:1.9.0")
 
     // CameraX
     implementation("androidx.camera:camera-core:1.3.0")
@@ -65,7 +63,7 @@ dependencies {
     // ML Kit Face Detection (on-device)
     implementation("com.google.mlkit:face-detection:16.1.7")
 
-    // TensorFlow Lite (official runtime) — must match the Java Interpreter usage
+    // TensorFlow Lite (official runtime)
     implementation("org.tensorflow:tensorflow-lite:2.12.0")
 
     // Kotlin Coroutines & Lifecycle
@@ -80,7 +78,4 @@ dependencies {
 
     // Image loading (optional)
     implementation("com.github.bumptech.glide:glide:4.15.1")
-    // kapt("com.github.bumptech.glide:compiler:4.15.1") // if using kapt
-
-    // Add any other libs you use via libs.versions.toml here
 }

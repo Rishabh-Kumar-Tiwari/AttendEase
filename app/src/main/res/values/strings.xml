@@ -2,7 +2,7 @@
 <resources>
 
     <!-- App Name -->
-    <string name="app_name">AttendanceManagementSystem</string>
+    <string name="app_name">AttendEase</string>
 
     <!-- Common -->
     <string name="status_idle">Status: Idle</string>
@@ -16,7 +16,6 @@
     <string name="btn_enroll">Enroll</string>
     <string name="btn_attendance">Attendance</string>
     <string name="btn_mark_present">Mark Present</string>
-    <string name="btn_undo_last">Undo Last</string>
     <string name="switch_auto_mark">Auto Mark</string>
     <string name="mode_auto_mark">Mode: Auto Mark</string>
     <string name="mode_manual_mark">Mode: Manual Mark</string>
