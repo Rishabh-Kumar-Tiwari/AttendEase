@@ -1,10 +1,10 @@
 package com.example.attendancemanagementsystem
 
-import android.app.Activity
 import android.content.Intent
 import android.graphics.Typeface
 import android.os.Bundle
 import android.util.TypedValue
+import android.view.View
 import android.widget.ArrayAdapter
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
@@ -15,17 +15,21 @@ class ClassSelectionActivity : AppCompatActivity() {
     private val adapterItems = mutableListOf<String>()
     private val adapterIds = mutableListOf<String>()
 
-    private val headerTextSp = 18f
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityClassSelectionBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
+        InsetsUtil.applyEdgeToEdge(
+            window = window,
+            root = binding.root,
+            toolbar = binding.topAppBar,
+            contentContainer = binding.headerView.parent as View,
+            navAnchoredView = binding.listClasses.parent as View
+        )
+
         setSupportActionBar(binding.topAppBar)
 
-        binding.btnCreateClass.setTextSize(TypedValue.COMPLEX_UNIT_SP, headerTextSp)
-        binding.btnManageClasses.setTextSize(TypedValue.COMPLEX_UNIT_SP, headerTextSp)
         binding.btnCreateClass.setTypeface(null, Typeface.NORMAL)
         binding.btnManageClasses.setTypeface(null, Typeface.NORMAL)
 
@@ -150,7 +154,12 @@ class ClassSelectionActivity : AppCompatActivity() {
             .show()
     }
 
-    @Deprecated("This method has been deprecated in favor of using the\n      {@link OnBackPressedDispatcher} via {@link #getOnBackPressedDispatcher()}.\n      The OnBackPressedDispatcher controls how back button events are dispatched\n      to one or more {@link OnBackPressedCallback} objects.")
+    @Deprecated(
+        "This method has been deprecated in favor of using the\n" +
+                "      {@link OnBackPressedDispatcher} via {@link #getOnBackPressedDispatcher()}.\n" +
+                "      The OnBackPressedDispatcher controls how back button events are dispatched\n" +
+                "      to one or more {@link OnBackPressedCallback} objects."
+    )
     override fun onBackPressed() {
         finishAffinity()
     }

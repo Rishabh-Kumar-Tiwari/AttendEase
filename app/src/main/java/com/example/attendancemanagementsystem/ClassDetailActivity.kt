@@ -3,7 +3,7 @@ package com.example.attendancemanagementsystem
 import android.content.Intent
 import android.graphics.Typeface
 import android.os.Bundle
-import android.util.TypedValue
+import android.view.View
 import android.widget.ArrayAdapter
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
@@ -15,7 +15,6 @@ class ClassDetailActivity : AppCompatActivity() {
     private var className: String = ""
     private val displayList = mutableListOf<String>()
     private val idList = mutableListOf<String>()
-    private val headerTextSp = 18f
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -26,10 +25,16 @@ class ClassDetailActivity : AppCompatActivity() {
         val room = ClassStorage.getClass(this, classId)
         className = room?.name ?: "Class"
 
+        InsetsUtil.applyEdgeToEdge(
+            window = window,
+            root = binding.root,
+            toolbar = binding.topAppBar,
+            contentContainer = binding.headerView.parent as View,   // headerView is xml id in your layout
+            navAnchoredView = binding.listStudents.parent as View
+        )
+
         setSupportActionBar(binding.topAppBar)
 
-        binding.btnAddStudent.setTextSize(TypedValue.COMPLEX_UNIT_SP, headerTextSp)
-        binding.btnDeleteClass.setTextSize(TypedValue.COMPLEX_UNIT_SP, headerTextSp)
         binding.btnAddStudent.setTypeface(null, Typeface.NORMAL)
         binding.btnDeleteClass.setTypeface(null, Typeface.NORMAL)
 

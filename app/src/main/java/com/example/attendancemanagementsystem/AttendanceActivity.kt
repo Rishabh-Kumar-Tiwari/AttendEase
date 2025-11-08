@@ -4,6 +4,7 @@ import android.app.DatePickerDialog
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
+import android.view.View
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.FileProvider
@@ -28,6 +29,14 @@ class AttendanceActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         binding = ActivityAttendanceBinding.inflate(layoutInflater)
         setContentView(binding.root)
+
+        InsetsUtil.applyEdgeToEdge(
+            window = window,
+            root = binding.root,
+            toolbar = binding.toolbarAttendance,
+            contentContainer = binding.recycler.parent as View,
+            navAnchoredView = binding.recycler.parent as View
+        )
 
         setSupportActionBar(binding.toolbarAttendance)
 

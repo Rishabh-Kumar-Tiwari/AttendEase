@@ -16,9 +16,7 @@
         <item name="colorSurface">@color/gray_800</item>
         <item name="colorOnSurface">@color/on_surface_dark</item>
 
-        <!-- System bars -->
-        <item name="android:statusBarColor">@color/purple_700</item>
-        <item name="android:navigationBarColor">@color/black</item>
+        <!-- Keep system bars untouched -->
         <item name="android:windowLightStatusBar">false</item>
 
         <!-- Typography -->
@@ -28,29 +26,11 @@
         <item name="materialButtonStyle">@style/Widget.Material3.Button</item>
         <item name="switchStyle">@style/Widget.Material3.CompoundButton.Switch</item>
 
-        <!-- Toolbar style -->
+        <!-- Toolbar style (defined in styles.xml) -->
         <item name="toolbarStyle">@style/CustomToolbar</item>
         <item name="materialToolbarStyle">@style/CustomToolbar</item>
 
         <item name="android:windowContentOverlay">@null</item>
-    </style>
-
-    <!-- Toolbar same look as light but on dark surfaces -->
-    <style name="CustomToolbar" parent="Widget.MaterialComponents.Toolbar">
-        <item name="android:background">?attr/colorPrimary</item>
-        <item name="titleTextColor">@color/on_primary</item>
-        <item name="subtitleTextColor">@color/on_primary</item>
-        <item name="android:titleTextColor">@color/on_primary</item>
-        <item name="android:subtitleTextColor">@color/on_primary</item>
-        <item name="navigationIconTint">@color/on_primary</item>
-        <item name="android:tint">@color/on_primary</item>
-        <item name="android:elevation">4dp</item>
-        <item name="android:layout_height">?attr/actionBarSize</item>
-    </style>
-
-    <style name="ToolbarTitleBold" parent="TextAppearance.Material3.TitleLarge">
-        <item name="android:textStyle">bold</item>
-        <item name="android:textColor">@color/on_primary</item>
     </style>
 
 </resources>

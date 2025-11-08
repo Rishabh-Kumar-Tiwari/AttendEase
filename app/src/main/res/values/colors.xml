@@ -26,4 +26,12 @@
 
     <!-- Utility -->
     <color name="black">#000000</color>
+
+    <!-- Delete / danger palette (material-appropriate) -->
+    <color name="red_400">#EF5350</color>
+    <color name="red_500">#F44336</color>
+    <color name="red_600">#E53935</color>
+    <color name="red_tint_light">#FCE4EC</color>
+    <color name="red_tint_dark">#FFCDD2</color>
+
 </resources>

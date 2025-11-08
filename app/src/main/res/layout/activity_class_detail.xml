@@ -61,8 +61,7 @@
                 android:id="@+id/btnAddStudent"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Enroll Student"
-                android:textSize="18sp"/>
+                android:text="Enroll Student"/>
 
             <!-- Flexible spacer pushes the Delete button to the right -->
             <View
@@ -72,10 +71,10 @@
 
             <Button
                 android:id="@+id/btnDeleteClass"
+                style="@style/Widget.App.Button.Delete"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Delete Class"
-                android:textSize="18sp" />
+                android:text="Delete Class" />
         </LinearLayout>
     </LinearLayout>
 

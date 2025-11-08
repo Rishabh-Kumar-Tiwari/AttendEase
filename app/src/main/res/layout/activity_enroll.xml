@@ -17,9 +17,9 @@
         android:elevation="2dp" />
 
     <ScrollView
+        android:id="@+id/scrollEnroll"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_marginTop="?attr/actionBarSize"
         android:padding="@dimen/page_padding"
         android:fillViewport="true">
 
@@ -52,7 +52,7 @@
                         android:layout_gravity="top|end"
                         android:background="?attr/selectableItemBackgroundBorderless"
                         android:padding="6dp"
-                        android:tint="@android:color/white"
+                        app:tint="@android:color/white"
                         app:srcCompat="@drawable/ic_cameraswitch" />
                 </FrameLayout>
             </androidx.cardview.widget.CardView>

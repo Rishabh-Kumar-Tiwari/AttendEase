@@ -12,7 +12,6 @@ import androidx.camera.core.CameraSelector
 import androidx.camera.core.ImageAnalysis
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.core.content.ContextCompat
-import androidx.core.view.WindowCompat
 import androidx.lifecycle.lifecycleScope
 import com.example.attendancemanagementsystem.databinding.ActivityMainBinding
 import kotlinx.coroutines.Dispatchers
@@ -72,11 +71,16 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        WindowCompat.setDecorFitsSystemWindows(window, true)
-
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
+        InsetsUtil.applyEdgeToEdge(
+            window = window,
+            root = binding.root,
+            toolbar = binding.topAppBar,
+            contentContainer = binding.contentRoot,
+            navAnchoredView = binding.contentRoot
+        )
         setSupportActionBar(binding.topAppBar)
 
         initUI()
@@ -133,11 +137,9 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun toggleCameraLens() {
-        // flip front/back
         isFrontFacing = !isFrontFacing
         lensSelector = if (isFrontFacing) CameraSelector.DEFAULT_FRONT_CAMERA else CameraSelector.DEFAULT_BACK_CAMERA
 
-        // if camera is active, rebind to apply new lens
         try {
             val cp = ProcessCameraProvider.getInstance(this)
             cp.addListener({

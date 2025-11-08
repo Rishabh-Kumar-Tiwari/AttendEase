@@ -5,6 +5,7 @@ import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.os.Bundle
 import android.util.Log
+import android.view.View
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
@@ -43,6 +44,16 @@ class EnrollmentActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         binding = ActivityEnrollBinding.inflate(layoutInflater)
         setContentView(binding.root)
+
+        val scrollView: View = binding.scrollEnroll
+
+        InsetsUtil.applyEdgeToEdge(
+            window = window,
+            root = binding.root,
+            toolbar = binding.toolbarEnroll,
+            contentContainer = scrollView,
+            navAnchoredView = scrollView
+        )
 
         setSupportActionBar(binding.toolbarEnroll)
 
