@@ -83,7 +83,7 @@ The system enables faculty to:
 
 ---
 
-## 🚀 What Makes AttendEase Unique
+## What Makes AttendEase Unique
 
 ### Comparison with Existing Solutions
 
@@ -108,7 +108,7 @@ The system enables faculty to:
 
 ---
 
-## 🏗️ Technical Architecture
+## Technical Architecture
 
 ### 5-Layer System Design
 
@@ -162,7 +162,7 @@ Frame Capture (CameraX)
 
 ---
 
-## 📊 Project Highlights
+## Project Highlights
 
 ### Experimental Validation Results
 
@@ -211,7 +211,7 @@ Accuracy:             99.5%
 
 ---
 
-## 💻 System Requirements
+## System Requirements
 
 ### Minimum Device Requirements
 
@@ -245,7 +245,7 @@ Accuracy:             99.5%
 
 ---
 
-## 🔧 Installation Guide
+## Installation Guide
 
 ### Step 1: Prerequisites Installation
 
@@ -403,7 +403,7 @@ After successful installation:
 
 ---
 
-## 🚀 Quick Start
+## Quick Start
 
 ### Basic Workflow
 
@@ -447,7 +447,7 @@ Export as CSV → Use in external systems
 
 ---
 
-## 📁 Project Structure
+## Project Structure
 
 ```
 AttendEase/
@@ -519,7 +519,7 @@ AttendEase/
 
 ---
 
-## 🛠️ Technology Stack
+## Technology Stack
 
 ### Frontend
 - **Language:** Kotlin 1.9+
@@ -557,7 +557,7 @@ AttendEase/
 
 ---
 
-## 📱 Usage Workflow
+## Usage Workflow
 
 ### Complete User Journey
 
@@ -654,7 +654,7 @@ AttendEase/
 
 ---
 
-## 📊 Performance Metrics
+## Performance Metrics
 
 ### Recognition Performance
 
@@ -689,7 +689,7 @@ Resource Metrics:
 
 ---
 
-## 📚 API Documentation
+## API Documentation
 
 ### Core Classes
 
@@ -745,7 +745,7 @@ generator.generateMasterCSV(
 
 ---
 
-## 🤝 Contributing
+## Contributing
 
 I welcome contributions! Please follow these guidelines:
 
@@ -796,7 +796,7 @@ I welcome contributions! Please follow these guidelines:
 
 ---
 
-## 📄 License
+## License
 
 This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) file for details.
 
@@ -810,7 +810,7 @@ This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) 
 
 ---
 
-## 👥 Authors
+## Author
 
 ### Developer
 
@@ -821,7 +821,7 @@ This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) 
 
 ---
 
-## 🙏 Acknowledgments
+## Acknowledgments
 
 ### Institutions & Organizations
 - **Android Open Source Project** - For Android framework and libraries
@@ -846,7 +846,7 @@ This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) 
 
 ---
 
-## 📞 Support & Contact
+## Support & Contact
 
 ### Getting Help
 
@@ -892,7 +892,7 @@ This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) 
 
 ---
 
-## 📈 Roadmap
+## Roadmap
 
 ### Short-Term (v1.1 - 3-6 months)
 - [ ] Multi-face batch recognition
@@ -918,7 +918,7 @@ This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) 
 
 ---
 
-## 📝 Changelog
+## Changelog
 
 ### Version 1.0 (Current Release - November 2025)
 - ✅ Initial production release
@@ -931,7 +931,7 @@ This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) 
 
 ---
 
-## ⭐ Star History
+## Star History
 
 If you find AttendEase useful, please consider starring this repository!
 
@@ -941,7 +941,7 @@ Your support motivates me to keep improving the project.
 
 ---
 
-## 📋 Additional Resources
+## Additional Resources
 
 ### Documentation
 - [Installation Guide](#installation-guide) - Step-by-step setup instructions
@@ -963,7 +963,7 @@ Your support motivates me to keep improving the project.
 
 ---
 
-## 🎓 Academic References
+## Academic References
 
 This project is part of the **Final Year Engineering Project** at IET DAVV Indore.
 
@@ -980,7 +980,7 @@ This project is part of the **Final Year Engineering Project** at IET DAVV Indor
 
 ---
 
-## 🏆 Awards & Recognition
+## Awards & Recognition
 
 - ✅ **Production-Ready System** - Fully functional and deployed
 - ✅ **Real Classroom Testing** - 15 days in live educational environment
@@ -990,7 +990,7 @@ This project is part of the **Final Year Engineering Project** at IET DAVV Indor
 
 ---
 
-## 📞 Quick Links
+## Quick Links
 
 | Resource | Link |
 |----------|------|
