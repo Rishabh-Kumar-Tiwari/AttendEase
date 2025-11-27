@@ -29,7 +29,7 @@
 - [API Documentation](#api-documentation)
 - [Contributing](#contributing)
 - [License](#license)
-- [Authors](#authors)
+- [Author](#author)
 - [Acknowledgments](#acknowledgments)
 
 ---
