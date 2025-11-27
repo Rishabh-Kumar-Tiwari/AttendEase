@@ -34,7 +34,7 @@
 
 ---
 
-📖 ## Overview
+## Overview
 
 **AttendEase** is a production-ready Android application that automates student attendance marking using **on-device facial recognition**. Unlike cloud-based solutions, AttendEase operates entirely offline, ensuring complete data privacy and eliminating internet dependency.
 
@@ -48,7 +48,7 @@ The system enables faculty to:
 
 ---
 
-✨ ## Key Features
+## Key Features
 
 ### 🔐 Privacy-First Architecture
 - ✅ **100% Offline Operation** - No internet, no cloud servers, no data transmission
